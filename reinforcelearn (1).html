@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReinforceLearn — Learn Reinforcement Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #7c3aed;
+    --purple-light: #a855f7;
+    --purple-glow: #9333ea;
+    --purple-dim: #4c1d95;
+    --black: #0a0a0f;
+    --dark: #0f0f1a;
+    --dark2: #151524;
+    --dark3: #1e1e35;
+    --white: #f4f0ff;
+    --muted: #8b8aab;
+    --border: rgba(124,58,237,0.2);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom Cursor */
+  #cursor {
+    width: 12px; height: 12px;
+    background: var(--purple-light);
+    border-radius: 50%;
+    position: fixed; top:0; left:0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: screen;
+  }
+  #cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(168,85,247,0.5);
+    border-radius: 50%;
+    position: fixed; top:0; left:0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.4s ease, width 0.3s, height 0.3s;
+  }
+
+  /* Grid bg */
+  body::before {
+    content:'';
+    position: fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top:0; left:0; right:0;
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 60px;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .logo span { color: var(--purple-light); }
+
+  .nav-links {
+    display: flex; gap: 40px; list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    cursor: none;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--white); }
+
+  .nav-cta {
+    background: var(--purple);
+    color: var(--white) !important;
+    padding: 10px 22px;
+    border-radius: 6px;
+    transition: background 0.2s, transform 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--purple-glow) !important; transform: translateY(-1px); }
+
+  /* PAGES */
+  .page { display: none; min-height: 100vh; padding-top: 80px; position: relative; z-index: 1; }
+  .page.active { display: block; }
+
+  /* ============ HOME ============ */
+  .hero {
+    min-height: calc(100vh - 80px);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 80px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-orb {
+    position: absolute;
+    right: -100px; top: 50%;
+    transform: translateY(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,58,237,0.3) 0%, rgba(124,58,237,0.05) 50%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: translateY(-50%) scale(1); opacity:0.8; }
+    50% { transform: translateY(-50%) scale(1.08); opacity:1; }
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    color: var(--purple-light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 32px;
+    width: fit-content;
+    background: rgba(124,58,237,0.06);
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--purple-light);
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 700px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 .accent { color: var(--purple-light); display: block; }
+
+  .hero-sub {
+    margin-top: 28px;
+    max-width: 480px;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    font-weight: 300;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    margin-top: 44px;
+    display: flex; gap: 16px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--purple);
+    color: var(--white);
+    padding: 14px 32px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: none;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    background: var(--purple-glow);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124,58,237,0.4);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--white);
+    padding: 14px 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--purple-light);
+    background: rgba(124,58,237,0.08);
+  }
+
+  .stats-row {
+    display: flex; gap: 60px;
+    margin-top: 80px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.03em;
+  }
+  .stat-num span { color: var(--purple-light); }
+  .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+  /* Features section */
+  .features {
+    padding: 100px 60px;
+    background: var(--dark);
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--purple-light);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    max-width: 500px;
+    line-height: 1.1;
+    margin-bottom: 60px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .feature-card {
+    background: var(--dark);
+    padding: 40px 36px;
+    transition: background 0.2s;
+  }
+  .feature-card:hover { background: var(--dark2); }
+  .feature-icon {
+    width: 48px; height: 48px;
+    background: rgba(124,58,237,0.12);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .feature-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(24px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* ============ CURRICULUM ============ */
+  .curriculum-hero {
+    padding: 80px 60px 40px;
+  }
+  .curriculum-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .curriculum-hero h1 em { color: var(--purple-light); font-style: normal; }
+  .curriculum-hero p { color: var(--muted); max-width: 480px; line-height: 1.7; font-size:1rem; }
+
+  .curriculum-track {
+    padding: 60px 60px;
+    display: flex; flex-direction: column; gap: 0;
+    position: relative;
+  }
+  .track-line {
+    position: absolute;
+    left: 91px; top: 60px; bottom: 60px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--purple), transparent);
+  }
+
+  .module {
+    display: flex; gap: 40px; align-items: flex-start;
+    margin-bottom: 50px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease both;
+  }
+  .module:nth-child(1) { animation-delay: 0.1s; }
+  .module:nth-child(2) { animation-delay: 0.2s; }
+  .module:nth-child(3) { animation-delay: 0.3s; }
+  .module:nth-child(4) { animation-delay: 0.4s; }
+  .module:nth-child(5) { animation-delay: 0.5s; }
+
+  .module-num {
+    min-width: 64px; height: 64px;
+    background: var(--dark3);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--purple-light);
+    z-index: 1;
+    position: relative;
+  }
+  .module-num.active {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: white;
+  }
+
+  .module-content {
+    flex:1;
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    transition: border-color 0.2s;
+  }
+  .module-content:hover { border-color: rgba(124,58,237,0.5); }
+
+  .module-week {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--purple-light);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .module-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .module-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.65; margin-bottom: 16px; }
+  .module-topics {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .topic-tag {
+    background: rgba(124,58,237,0.1);
+    border: 1px solid rgba(124,58,237,0.25);
+    color: var(--purple-light);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  /* ============ ABOUT ============ */
+  .about-section {
+    padding: 80px 60px;
+  }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-bottom: 80px;
+  }
+  .about-text h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    margin-bottom: 24px;
+  }
+  .about-text h2 em { color: var(--purple-light); font-style: normal; }
+  .about-text p { color: var(--muted); line-height: 1.75; font-size: 0.95rem; margin-bottom: 16px; }
+
+  .about-visual {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-visual::after {
+    content:'';
+    position:absolute;
+    top:-60px; right:-60px;
+    width:200px; height:200px;
+    background: radial-gradient(circle, rgba(124,58,237,0.3) 0%, transparent 70%);
+    border-radius:50%;
+    pointer-events:none;
+  }
+
+  .rl-diagram {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .rl-node {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .rl-node-icon {
+    width: 40px; height: 40px;
+    background: rgba(124,58,237,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .rl-node-text { font-size: 0.9rem; font-weight: 500; }
+  .rl-node-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .rl-arrow {
+    text-align: center;
+    color: var(--purple-light);
+    font-size: 1.2rem;
+    margin: -8px 0;
+  }
+
+  .team-section { margin-top: 0; }
+  .team-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 32px;
+  }
+  .values-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+  }
+  .value-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .value-card:hover { border-color: rgba(124,58,237,0.5); transform: translateY(-3px); }
+  .value-emoji { font-size: 1.8rem; margin-bottom: 12px; }
+  .value-name { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:8px; }
+  .value-text { color:var(--muted); font-size:0.85rem; line-height:1.6; }
+
+  /* ============ TESTIMONIALS ============ */
+  .testimonials-section { padding: 80px 60px; }
+  .testimonials-section h1 {
+    font-family:'Syne',sans-serif;
+    font-size: clamp(2.5rem,5vw,4rem);
+    font-weight:800;
+    letter-spacing:-0.04em;
+    margin-bottom: 12px;
+  }
+  .testimonials-section h1 em { color: var(--purple-light); font-style:normal; }
+  .testimonials-section .intro { color:var(--muted); margin-bottom:60px; font-size:1rem; line-height:1.7; max-width:500px; }
+
+  .testimonials-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+  }
+  .tcard {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .tcard:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-4px); }
+  .tcard.featured {
+    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(124,58,237,0.05));
+    border-color: rgba(124,58,237,0.4);
+    grid-column: span 2;
+  }
+  .tcard-quote {
+    font-size: 3rem; line-height:1;
+    color: var(--purple);
+    font-family: 'Syne', sans-serif;
+    margin-bottom: 12px;
+  }
+  .tcard-text {
+    color: var(--white);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+  .tcard.featured .tcard-text { font-size: 1.05rem; }
+  .tcard-author { display:flex; align-items:center; gap:14px; }
+  .tcard-avatar {
+    width:40px; height:40px; border-radius:50%;
+    background: var(--purple);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif;
+    font-weight:800; font-size:0.9rem;
+    color:white;
+  }
+  .tcard-name { font-family:'Syne',sans-serif; font-weight:700; font-size:0.9rem; }
+  .tcard-role { color:var(--muted); font-size:0.78rem; margin-top:2px; }
+  .stars { color:#f59e0b; font-size:0.85rem; margin-bottom:12px; letter-spacing:2px; }
+
+  /* ============ FAQ ============ */
+  .faq-section { padding: 80px 60px; max-width: 900px; }
+  .faq-section h1 {
+    font-family:'Syne',sans-serif;
+    font-size:clamp(2.5rem,5vw,4rem);
+    font-weight:800;
+    letter-spacing:-0.04em;
+    margin-bottom:12px;
+  }
+  .faq-section h1 em { color:var(--purple-light); font-style:normal; }
+  .faq-section .intro { color:var(--muted); margin-bottom:50px; font-size:1rem; line-height:1.7; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 24px 0;
+  }
+  .faq-q {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: none;
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    color: var(--white);
+    transition: color 0.2s;
+  }
+  .faq-q:hover { color: var(--purple-light); }
+  .faq-icon {
+    color: var(--purple-light);
+    font-size: 1.4rem;
+    transition: transform 0.3s;
+    min-width: 24px; text-align:center;
+  }
+  .faq-icon.open { transform: rotate(45deg); }
+  .faq-a {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.75;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, margin-top 0.3s;
+  }
+  .faq-a.open { max-height: 300px; margin-top: 14px; }
+
+  /* ============ CONTACT ============ */
+  .contact-section { padding: 80px 60px; }
+  .contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+  .contact-info h1 {
+    font-family:'Syne',sans-serif;
+    font-size:clamp(2.5rem,5vw,4rem);
+    font-weight:800;
+    letter-spacing:-0.04em;
+    line-height:1.05;
+    margin-bottom:20px;
+  }
+  .contact-info h1 em { color:var(--purple-light); font-style:normal; }
+  .contact-info p { color:var(--muted); line-height:1.75; margin-bottom:40px; }
+
+  .contact-details { display:flex; flex-direction:column; gap:20px; }
+  .contact-item {
+    display:flex; align-items:center; gap:16px;
+    padding: 18px 22px;
+    background:var(--dark2);
+    border:1px solid var(--border);
+    border-radius:10px;
+  }
+  .contact-item-icon {
+    width:40px; height:40px;
+    background:rgba(124,58,237,0.12);
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+  }
+  .contact-item-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
+  .contact-item-value { font-size:0.92rem; font-weight:500; margin-top:2px; }
+
+  .contact-form {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+  }
+  .form-group { margin-bottom: 22px; }
+  .form-group label {
+    display:block;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-weight:600;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .form-group input, .form-group textarea, .form-group select {
+    width:100%;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: none;
+  }
+  .form-group input:focus, .form-group textarea:focus {
+    border-color: var(--purple-light);
+  }
+  .form-group textarea { height: 130px; resize: none; }
+  .form-submit {
+    width:100%;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 15px;
+    font-family:'DM Sans',sans-serif;
+    font-size:0.95rem;
+    font-weight:500;
+    cursor: none;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .form-submit:hover { background:var(--purple-glow); transform:translateY(-1px); }
+
+  /* SUCCESS */
+  .form-success {
+    display:none;
+    text-align:center;
+    padding:20px 0;
+  }
+  .form-success .checkmark { font-size:2.5rem; margin-bottom:12px; }
+  .form-success p { color:var(--muted); font-size:0.9rem; }
+  .form-success h3 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:700; margin-bottom:8px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: 0.82rem;
+    position: relative; z-index:1;
+  }
+  .footer-logo { font-family:'Syne',sans-serif; font-weight:800; color:var(--white); }
+  .footer-logo span { color: var(--purple-light); }
+
+  /* Responsive basics */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { gap: 20px; }
+    .hero, .curriculum-hero, .curriculum-track, .features,
+    .about-section, .testimonials-section, .faq-section, .contact-section { padding-left: 24px; padding-right: 24px; }
+    .about-grid, .contact-grid { grid-template-columns:1fr; gap:40px; }
+    .features-grid, .testimonials-grid, .values-grid { grid-template-columns:1fr; }
+    .tcard.featured { grid-column:span 1; }
+    .stats-row { gap:30px; flex-wrap:wrap; }
+    .track-line { display:none; }
+    footer { flex-direction:column; gap:12px; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<nav>
+  <div class="logo">Reinforce<span>Learn</span></div>
+  <ul class="nav-links">
+    <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+    <li><a href="#" class="nav-link" data-page="about">About</a></li>
+    <li><a href="#" class="nav-link" data-page="curriculum">Curriculum</a></li>
+    <li><a href="#" class="nav-link" data-page="testimonials">Testimonials</a></li>
+    <li><a href="#" class="nav-link" data-page="faq">FAQ</a></li>
+    <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
+    <li><a href="https://forms.gle/jrJtZQLG7UqGFMug6" target="_blank" class="nav-cta" style="text-decoration:none;color:var(--white);padding:10px 22px;border-radius:6px;background:var(--purple);font-size:0.875rem;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;transition:background 0.2s,transform 0.2s;cursor:none;" onmouseover="this.style.background='var(--purple-glow)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='var(--purple)';this.style.transform='none'">Get Started</a></li>
+  </ul>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <section class="hero">
+    <div class="hero-orb"></div>
+    <div class="hero-badge"><div class="badge-dot"></div>Now enrolling for 2025</div>
+    <h1>Learn<br>Reinforcement<br><span class="accent">Learning.</span></h1>
+    <p class="hero-sub">Shape the future of AI. Build, visualize, and train intelligent agents with a modern learning platform designed for students in grades 7–10.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="showPage('curriculum')">Explore Curriculum</button>
+      <a href="https://forms.gle/jrJtZQLG7UqGFMug6" target="_blank" class="btn-secondary" style="display:inline-flex;align-items:center;text-decoration:none;">Apply Now →</a>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-num">12<span>+</span></div>
+        <div class="stat-label">Hands-on modules</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">7–<span>10</span></div>
+        <div class="stat-label">Grade levels</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">0<span>$</span></div>
+        <div class="stat-label">Free forever</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">Future potential</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="section-label">What We Offer</div>
+    <div class="section-title">Built for curious young minds.</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">Train Real Agents</div>
+        <div class="feature-desc">Students build and watch agents learn through trial and error — from grid worlds to CartPole — seeing RL in action, not just theory.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Visual Learning</div>
+        <div class="feature-desc">Complex concepts like the Bellman equation and Q-tables are brought to life through animated visualizations and interactive demos.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-title">Deep Concepts, Simple Language</div>
+        <div class="feature-desc">From explore vs. exploit to deep Q-networks, we translate cutting-edge AI research into something a 7th grader can genuinely understand.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💻</div>
+        <div class="feature-title">Python-First Projects</div>
+        <div class="feature-desc">Students write real Python code, not just drag-and-drop blocks. They leave with working projects they can show off and build on.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <div class="feature-title">Built by a Student</div>
+        <div class="feature-desc">ReinforceLearn was created by a high school student who actually does this work — so the curriculum meets students where they are.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">Problem-Centered Design</div>
+        <div class="feature-desc">Every concept is taught through a challenge. Students don't learn RL to pass a test — they learn it to solve interesting problems.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CURRICULUM -->
+<div id="curriculum" class="page">
+  <div class="curriculum-hero">
+    <div class="section-label">The Program</div>
+    <h1>A <em>12-week</em> journey<br>into AI</h1>
+    <p>From zero to training intelligent agents. Each module builds on the last — no prior AI experience needed, just curiosity. Three phases: foundations, core RL, and advanced deep RL.</p>
+  </div>
+
+  <div class="curriculum-track">
+    <div class="track-line"></div>
+
+    <!-- PHASE 1 -->
+    <div style="padding-left:0;margin-bottom:16px;display:flex;align-items:center;gap:16px;">
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--purple-light);font-weight:700;white-space:nowrap;padding:6px 16px;border:1px solid var(--border);border-radius:100px;background:rgba(124,58,237,0.08);">Phase 1 — Foundations</div>
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+    </div>
+
+    <div class="module">
+      <div class="module-num active">01</div>
+      <div class="module-content">
+        <div class="module-week">Week 1 · Introduction</div>
+        <div class="module-title">What Is Reinforcement Learning?</div>
+        <div class="module-desc">The big picture: what makes RL different from supervised and unsupervised learning. Students explore how agents interact with environments through actions and observations, and why reward-driven learning is so powerful.</div>
+        <div class="module-topics">
+          <span class="topic-tag">Agent & Environment</span>
+          <span class="topic-tag">Reward Signal</span>
+          <span class="topic-tag">RL vs ML</span>
+          <span class="topic-tag">Real-World Examples</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">02</div>
+      <div class="module-content">
+        <div class="module-week">Week 2 · Core Concepts</div>
+        <div class="module-title">States, Actions & the Markov Property</div>
+        <div class="module-desc">We formalize the RL framework with Markov Decision Processes. Students learn what a state really is, how action spaces are defined, and why the Markov property is the mathematical foundation everything else is built on.</div>
+        <div class="module-topics">
+          <span class="topic-tag">MDPs</span>
+          <span class="topic-tag">State Spaces</span>
+          <span class="topic-tag">Action Spaces</span>
+          <span class="topic-tag">Markov Property</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">03</div>
+      <div class="module-content">
+        <div class="module-week">Week 3 · Rewards & Goals</div>
+        <div class="module-title">Reward Design & Discount Factors</div>
+        <div class="module-desc">Designing reward functions is one of the hardest parts of RL. Students learn what makes a good (and bad) reward, why long-term vs short-term rewards matter, and how the discount factor γ controls how far ahead an agent thinks.</div>
+        <div class="module-topics">
+          <span class="topic-tag">Reward Shaping</span>
+          <span class="topic-tag">Discount Factor γ</span>
+          <span class="topic-tag">Sparse Rewards</span>
+          <span class="topic-tag">Return G_t</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div style="padding-left:0;margin-bottom:16px;margin-top:8px;display:flex;align-items:center;gap:16px;">
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--purple-light);font-weight:700;white-space:nowrap;padding:6px 16px;border:1px solid var(--border);border-radius:100px;background:rgba(124,58,237,0.08);">Phase 2 — Core RL</div>
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">04</div>
+      <div class="module-content">
+        <div class="module-week">Week 4 · Value Functions</div>
+        <div class="module-title">Value Functions & the Bellman Equation</div>
+        <div class="module-desc">The mathematical heart of RL. Students derive the Bellman equation from first principles, implement value and action-value functions, and see how iterating the Bellman backup leads to optimal policies.</div>
+        <div class="module-topics">
+          <span class="topic-tag">V(s) and Q(s,a)</span>
+          <span class="topic-tag">Bellman Equation</span>
+          <span class="topic-tag">Optimal Policy</span>
+          <span class="topic-tag">Policy Evaluation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">05</div>
+      <div class="module-content">
+        <div class="module-week">Week 5 · Tabular RL</div>
+        <div class="module-title">Q-Learning & Q-Tables</div>
+        <div class="module-desc">Students build their first Q-learning agent from scratch. They construct a Q-table, implement the TD update rule, and watch the agent gradually learn to navigate a grid world — seeing RL click in real time.</div>
+        <div class="module-topics">
+          <span class="topic-tag">Q-Tables</span>
+          <span class="topic-tag">TD Learning</span>
+          <span class="topic-tag">Learning Rate α</span>
+          <span class="topic-tag">Grid World Lab</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">06</div>
+      <div class="module-content">
+        <div class="module-week">Week 6 · Exploration</div>
+        <div class="module-title">Explore vs. Exploit</div>
+        <div class="module-desc">Should your agent try new things or stick with what works? Students experiment with epsilon-greedy strategies, decaying exploration schedules, and the multi-armed bandit problem — building deep intuition for one of RL's core dilemmas.</div>
+        <div class="module-topics">
+          <span class="topic-tag">Epsilon-Greedy</span>
+          <span class="topic-tag">Exploration Decay</span>
+          <span class="topic-tag">Multi-Armed Bandit</span>
+          <span class="topic-tag">UCB Strategy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">07</div>
+      <div class="module-content">
+        <div class="module-week">Week 7 · Policy Methods</div>
+        <div class="module-title">Policy Iteration & SARSA</div>
+        <div class="module-desc">Students learn the difference between on-policy and off-policy learning. We compare SARSA (on-policy) to Q-learning (off-policy), implement both, and explore how policy iteration converges to optimal solutions.</div>
+        <div class="module-topics">
+          <span class="topic-tag">SARSA</span>
+          <span class="topic-tag">On-policy vs Off-policy</span>
+          <span class="topic-tag">Policy Iteration</span>
+          <span class="topic-tag">Convergence</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div style="padding-left:0;margin-bottom:16px;margin-top:8px;display:flex;align-items:center;gap:16px;">
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--purple-light);font-weight:700;white-space:nowrap;padding:6px 16px;border:1px solid var(--border);border-radius:100px;background:rgba(124,58,237,0.08);">Phase 3 — Deep RL</div>
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">08</div>
+      <div class="module-content">
+        <div class="module-week">Week 8 · Neural Networks</div>
+        <div class="module-title">Neural Networks for RL</div>
+        <div class="module-desc">Before building DQNs, students need to understand neural networks. This week covers the basics: layers, activation functions, backpropagation, and how a network learns to approximate functions — setting the stage for Deep RL.</div>
+        <div class="module-topics">
+          <span class="topic-tag">Feedforward Networks</span>
+          <span class="topic-tag">Activation Functions</span>
+          <span class="topic-tag">Backpropagation</span>
+          <span class="topic-tag">Function Approximation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">09</div>
+      <div class="module-content">
+        <div class="module-week">Week 9 · Deep Q-Networks</div>
+        <div class="module-title">DQNs — When Q-Tables Aren't Enough</div>
+        <div class="module-desc">When state spaces are too large for a table, we use neural networks. Students learn the DQN architecture, experience replay, and target networks — the innovations that powered DeepMind's Atari-playing agents.</div>
+        <div class="module-topics">
+          <span class="topic-tag">DQN Architecture</span>
+          <span class="topic-tag">Experience Replay</span>
+          <span class="topic-tag">Target Networks</span>
+          <span class="topic-tag">Loss Functions</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">10</div>
+      <div class="module-content">
+        <div class="module-week">Week 10 · OpenAI Gym</div>
+        <div class="module-title">Training Agents in Real Environments</div>
+        <div class="module-desc">Students put everything together using OpenAI Gym. They train agents on classic control tasks like CartPole and MountainCar, learn how to read environment APIs, tune hyperparameters, and interpret training curves.</div>
+        <div class="module-topics">
+          <span class="topic-tag">OpenAI Gym</span>
+          <span class="topic-tag">CartPole</span>
+          <span class="topic-tag">Hyperparameter Tuning</span>
+          <span class="topic-tag">Training Curves</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">11</div>
+      <div class="module-content">
+        <div class="module-week">Week 11 · Advanced Topics</div>
+        <div class="module-title">Policy Gradients & Actor-Critic</div>
+        <div class="module-desc">A peek at the frontier. Students are introduced to policy gradient methods — agents that directly optimize their policy rather than learning a value function — and the actor-critic architecture that combines the best of both worlds.</div>
+        <div class="module-topics">
+          <span class="topic-tag">REINFORCE Algorithm</span>
+          <span class="topic-tag">Policy Gradients</span>
+          <span class="topic-tag">Actor-Critic</span>
+          <span class="topic-tag">Advantage Function</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="module-num">12</div>
+      <div class="module-content">
+        <div class="module-week">Week 12 · Capstone</div>
+        <div class="module-title">Build & Present Your Own Agent</div>
+        <div class="module-desc">The culmination of 12 weeks. Students choose a challenge environment, design their agent architecture, train it from scratch, and present results to peers and mentors. This is the project you'll show at science fairs, competitions, and college apps.</div>
+        <div class="module-topics">
+          <span class="topic-tag">Full RL Pipeline</span>
+          <span class="topic-tag">Environment of Choice</span>
+          <span class="topic-tag">Performance Analysis</span>
+          <span class="topic-tag">Project Showcase</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;padding-bottom:40px;">
+      <a href="https://forms.gle/jrJtZQLG7UqGFMug6" target="_blank" class="btn-primary" style="display:inline-block;text-decoration:none;">Apply Now — It's Free →</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div id="about" class="page">
+  <div class="about-section">
+    <div class="about-grid">
+      <div class="about-text">
+        <div class="section-label">Our Story</div>
+        <h2>AI education shouldn't wait for <em>college.</em></h2>
+        <p>ReinforceLearn was built on a simple frustration: reinforcement learning — one of the most powerful and fascinating areas of modern AI — is almost completely absent from K-12 education. Most students don't encounter it until graduate school, if ever.</p>
+        <p>We believe that's backwards. The concepts behind RL — reward, consequence, exploration, strategy — are deeply intuitive. They map onto how humans and animals learn naturally. Students in 7th grade are ready to understand them.</p>
+        <p>So we built the curriculum we wished existed. Rigorous enough to be meaningful. Approachable enough to be fun. Built by a student, for students.</p>
+        <button class="btn-primary" onclick="showPage('curriculum')">See the Curriculum</button>
+      </div>
+      <div class="about-visual">
+        <div class="section-label" style="margin-bottom:24px;">How RL Works</div>
+        <div class="rl-diagram">
+          <div class="rl-node">
+            <div class="rl-node-icon">🤖</div>
+            <div>
+              <div class="rl-node-text">Agent</div>
+              <div class="rl-node-sub">Observes state, chooses action</div>
+            </div>
+          </div>
+          <div class="rl-arrow">↓ action</div>
+          <div class="rl-node">
+            <div class="rl-node-icon">🌍</div>
+            <div>
+              <div class="rl-node-text">Environment</div>
+              <div class="rl-node-sub">Returns reward + new state</div>
+            </div>
+          </div>
+          <div class="rl-arrow">↓ reward</div>
+          <div class="rl-node">
+            <div class="rl-node-icon">📈</div>
+            <div>
+              <div class="rl-node-text">Policy Update</div>
+              <div class="rl-node-sub">Agent learns to maximize reward</div>
+            </div>
+          </div>
+          <div class="rl-arrow">↺ repeat</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-section">
+      <div class="team-title">Our Values</div>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-emoji">🔬</div>
+          <div class="value-name">Rigor Without Gatekeeping</div>
+          <div class="value-text">We don't water down the math — we make it accessible. Real concepts, real code, taught with patience.</div>
+        </div>
+        <div class="value-card">
+          <div class="value-emoji">🌱</div>
+          <div class="value-name">Curiosity Over Credentials</div>
+          <div class="value-text">No prerequisites. No barriers. If you're curious about AI, you belong here. We start from zero, together.</div>
+        </div>
+        <div class="value-card">
+          <div class="value-emoji">🤝</div>
+          <div class="value-name">Student-Built, Student-First</div>
+          <div class="value-text">This curriculum was designed by someone who went through the same confusion. We meet students exactly where they are.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div id="testimonials" class="page">
+  <div class="testimonials-section">
+    <div class="section-label">What People Say</div>
+    <h1>Real <em>results</em><br>from real students.</h1>
+    <p class="intro">Don't take our word for it. Here's what students, parents, and teachers are saying about ReinforceLearn.</p>
+
+    <div class="testimonials-grid">
+      <div class="tcard featured">
+        <div class="stars">★★★★★</div>
+        <div class="tcard-quote">"</div>
+        <div class="tcard-text">I went in thinking reinforcement learning was something only PhD students could understand. By Week 3, I had a working Q-learning agent navigating a grid world on my own laptop. The way everything connects — the math, the code, the intuition — it just clicks. I've never felt smarter in my life.</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">JK</div>
+          <div>
+            <div class="tcard-name">Jordan K.</div>
+            <div class="tcard-role">8th Grade Student, Portland OR</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tcard">
+        <div class="stars">★★★★★</div>
+        <div class="tcard-quote">"</div>
+        <div class="tcard-text">My daughter came home explaining the explore-exploit tradeoff using a restaurant analogy she invented herself. The curriculum teaches kids to think, not just follow steps.</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">MP</div>
+          <div>
+            <div class="tcard-name">Maya P.</div>
+            <div class="tcard-role">Parent of 9th Grader</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tcard">
+        <div class="stars">★★★★★</div>
+        <div class="tcard-quote">"</div>
+        <div class="tcard-text">As a CS teacher, I've tried a dozen AI curricula. ReinforceLearn is the only one where students are genuinely building something from scratch — and feeling proud of it.</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">TR</div>
+          <div>
+            <div class="tcard-name">T. Reyes</div>
+            <div class="tcard-role">CS Teacher, Washington Middle School</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tcard">
+        <div class="stars">★★★★★</div>
+        <div class="tcard-quote">"</div>
+        <div class="tcard-text">The Bellman equation used to intimidate me. Now I think about it like updating a game strategy. The visual explanations completely changed how I understand AI.</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">AS</div>
+          <div>
+            <div class="tcard-name">Aiden S.</div>
+            <div class="tcard-role">10th Grade Student</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tcard">
+        <div class="stars">★★★★★</div>
+        <div class="tcard-quote">"</div>
+        <div class="tcard-text">The capstone project was the highlight of my son's school year. He stayed up until midnight training his CartPole agent and woke me up to show me when it finally worked.</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">LW</div>
+          <div>
+            <div class="tcard-name">L. Washington</div>
+            <div class="tcard-role">Parent of 7th Grader</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div id="faq" class="page">
+  <div class="faq-section">
+    <div class="section-label">Questions & Answers</div>
+    <h1>Got <em>questions?</em><br>We've got answers.</h1>
+    <p class="intro">Everything you need to know about ReinforceLearn. If you don't see your question here, reach out through the contact page.</p>
+
+    <div id="faq-list"></div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div id="contact" class="page">
+  <div class="contact-section">
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="section-label">Reach Out</div>
+        <h1>Let's build<br>the future of<br><em>AI education.</em></h1>
+        <p>Whether you're a student ready to enroll, a teacher looking to bring ReinforceLearn to your classroom, or just curious — we'd love to hear from you.</p>
+
+        <div class="contact-details">
+          <div class="contact-item">
+            <div class="contact-item-icon">📧</div>
+            <div>
+              <div class="contact-item-label">Email</div>
+              <div class="contact-item-value">hello@reinforcelearn.io</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            <div>
+              <div class="contact-item-label">Location</div>
+              <div class="contact-item-value">Portland, Oregon</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon">⚡</div>
+            <div>
+              <div class="contact-item-label">Response Time</div>
+              <div class="contact-item-value">Usually within 24 hours</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form" style="padding:0;overflow:hidden;border-radius:16px;border:1px solid var(--border);">
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfqrJtZQLG7UqGFMug6/viewform?embedded=true"
+          width="100%" height="620" frameborder="0" marginheight="0" marginwidth="0"
+          style="display:block;background:var(--dark2);border:none;border-radius:16px;">
+          Loading…
+        </iframe>
+        <div style="text-align:center;padding:20px;background:var(--dark2);">
+          <a href="https://forms.gle/jrJtZQLG7UqGFMug6" target="_blank" class="btn-primary" style="display:inline-block;text-decoration:none;">Open Form in New Tab →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Reinforce<span>Learn</span></div>
+  <div>Built by a student, for students. Portland, OR.</div>
+  <div>© 2025 ReinforceLearn</div>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = `translate(${mx-6}px, ${my-6}px)`;
+  });
+  function animRing() {
+    rx += (mx-rx-18)*0.12;
+    ry += (my-ry-18)*0.12;
+    ring.style.transform = `translate(${rx}px, ${ry}px)`;
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  // Navigation
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(a => {
+      a.classList.toggle('active', a.dataset.page === id);
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  document.querySelectorAll('.nav-link').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      showPage(a.dataset.page);
+    });
+  });
+
+  // FAQ data
+  const faqs = [
+    {
+      q: "Who is ReinforceLearn designed for?",
+      a: "ReinforceLearn is designed for students in grades 7–10 (roughly ages 12–16). No prior AI or machine learning experience is required — just curiosity and a willingness to learn Python basics. We do assume students are comfortable with basic algebra."
+    },
+    {
+      q: "Is this program free?",
+      a: "Yes, completely free. ReinforceLearn is a passion project built to make AI education more accessible. There are no fees, no subscriptions, and no hidden costs. All curriculum materials, code, and resources are open and available to everyone."
+    },
+    {
+      q: "Do I need to know how to code?",
+      a: "Some Python familiarity is helpful but not required. We introduce Python concepts as they come up and provide starter code for every exercise. By the end of Week 1, you'll have enough to follow along. By Week 5, you'll be writing full RL agents yourself."
+    },
+    {
+      q: "How long does the program take?",
+      a: "The core curriculum is 12 weeks across three phases: Foundations (weeks 1–3), Core RL (weeks 4–7), and Deep RL (weeks 8–12). Expect roughly 3–4 hours of material per week. It's self-paced, so you can move faster if you're flying through it or slower if you want to go deeper."
+    },
+    {
+      q: "Can teachers use this in their classroom?",
+      a: "Absolutely — and we'd love to support that. If you're an educator, reach out through the contact page and we'll send you a teacher's guide, discussion prompts, grading rubrics, and presentation slides for each module."
+    },
+    {
+      q: "What will I be able to build after completing the program?",
+      a: "By the end of Week 12, you'll have trained working RL agents using Python, understand Q-learning, the Bellman equation, DQNs, policy gradients, and actor-critic methods. You'll present a full capstone project — an excellent portfolio piece for science fairs, competitions, and college applications."
+    },
+    {
+      q: "Who created ReinforceLearn?",
+      a: "ReinforceLearn was created by a high school junior at Westview High School in Portland, Oregon, with a background in robotics and machine learning research. The curriculum reflects years of self-directed learning in RL, including work with LSTM networks, deep RL agents, and robotic manipulation systems."
+    },
+    {
+      q: "Is there a certificate or credential at the end?",
+      a: "We issue a digital completion certificate for students who finish all 5 modules and submit a capstone project. It's not a formal credential, but it demonstrates real skills — and the projects themselves are excellent portfolio pieces for future applications."
+    }
+  ];
+
+  const faqList = document.getElementById('faq-list');
+  faqs.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    item.innerHTML = `
+      <div class="faq-q" onclick="toggleFaq(${i})">
+        <span>${f.q}</span>
+        <span class="faq-icon" id="faq-icon-${i}">+</span>
+      </div>
+      <div class="faq-a" id="faq-a-${i}">${f.a}</div>
+    `;
+    faqList.appendChild(item);
+  });
+
+  function toggleFaq(i) {
+    const a = document.getElementById(`faq-a-${i}`);
+    const icon = document.getElementById(`faq-icon-${i}`);
+    const isOpen = a.classList.contains('open');
+    document.querySelectorAll('.faq-a').forEach(el=>el.classList.remove('open'));
+    document.querySelectorAll('.faq-icon').forEach(el=>{el.classList.remove('open');el.textContent='+';});
+    if (!isOpen) {
+      a.classList.add('open');
+      icon.classList.add('open');
+      icon.textContent = '+';
+    }
+  }
+
+  // Contact form
+  function submitForm() {
+    const name = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    if (!name || !email) {
+      alert('Please fill in at least your name and email.');
+      return;
+    }
+    document.getElementById('contact-form-inner').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
+  }
+
+  // Page load animation
+  document.querySelectorAll('.page').forEach(p => {
+    const observer = new IntersectionObserver(() => {}, {});
+  });
+</script>
+</body>
+</html>
