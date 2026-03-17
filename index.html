@@ -100,14 +100,60 @@
   }
   .nav-links a:hover, .nav-links a.active { color: var(--white); }
 
-  .nav-cta {
+  .nav-cta-link {
+    display: inline-block;
     background: var(--purple);
     color: var(--white) !important;
     padding: 10px 22px;
     border-radius: 6px;
-    transition: background 0.2s, transform 0.2s !important;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    transition: background 0.2s, transform 0.2s;
+    cursor: none;
   }
-  .nav-cta:hover { background: var(--purple-glow) !important; transform: translateY(-1px); }
+  .nav-cta-link:hover { background: var(--purple-glow); transform: translateY(-1px); }
+
+  /* Hamburger (hidden on desktop) */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px; height: 40px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 1100;
+    flex-shrink: 0;
+  }
+  .hamburger span {
+    display: block;
+    width: 20px; height: 2px;
+    background: var(--white);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+    transform-origin: center;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Mobile overlay backdrop */
+  .mobile-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .mobile-overlay.active { opacity: 1; }
 
   /* PAGES */
   .page { display: none; min-height: 100vh; padding-top: 80px; position: relative; z-index: 1; }
@@ -223,20 +269,37 @@
     background: rgba(124,58,237,0.08);
   }
 
+  /* FIX 1: Stats row — full width, break out of hero content flow */
   .stats-row {
-    display: flex; gap: 60px;
+    display: flex;
+    gap: 0;
     margin-top: 80px;
-    padding-top: 40px;
+    margin-left: -60px;
+    margin-right: -60px;
+    padding: 40px 60px;
     border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
     animation: fadeUp 0.6s 0.4s ease both;
+    width: calc(100% + 120px);
+    background: rgba(124,58,237,0.03);
   }
-  .stat-item {}
+
+  .stat-item {
+    flex: 1;
+    padding: 0 40px;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:first-child { padding-left: 0; }
+  .stat-item:last-child { border-right: none; }
+
+  /* FIX 2: Prevent stat numbers from line-breaking */
   .stat-num {
     font-family: 'Syne', sans-serif;
     font-size: 2.2rem;
     font-weight: 800;
     color: var(--white);
     letter-spacing: -0.03em;
+    white-space: nowrap;   /* ← prevents "12" and "+" from wrapping to separate lines */
   }
   .stat-num span { color: var(--purple-light); }
   .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
@@ -689,18 +752,150 @@
   .footer-logo { font-family:'Syne',sans-serif; font-weight:800; color:var(--white); }
   .footer-logo span { color: var(--purple-light); }
 
-  /* Responsive basics */
+  /* ═══════════════════════════════════
+     TABLET  (≤ 900px)
+  ═══════════════════════════════════ */
   @media (max-width: 900px) {
     nav { padding: 16px 24px; }
-    .nav-links { gap: 20px; }
+
+    /* Hide desktop nav, show hamburger */
+    .nav-links {
+      display: none;
+      position: fixed;
+      top: 0; right: 0;
+      width: min(320px, 85vw);
+      height: 100vh;
+      background: var(--dark2);
+      border-left: 1px solid var(--border);
+      flex-direction: column;
+      gap: 0;
+      padding: 80px 0 40px;
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      overflow-y: auto;
+    }
+    .nav-links.mobile-open {
+      display: flex;
+      transform: translateX(0);
+    }
+    .mobile-overlay { display: block; }
+    .mobile-overlay.active { pointer-events: all; }
+
+    .nav-links li { border-bottom: 1px solid var(--border); }
+    .nav-links a {
+      display: block;
+      padding: 18px 28px;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--white); background: rgba(124,58,237,0.06); }
+    .nav-cta-li { border-bottom: none !important; padding: 20px 28px 0; }
+    .nav-cta-link { display: block; text-align: center; padding: 14px 22px; }
+
+    .hamburger { display: flex; }
+
+    /* Page padding */
     .hero, .curriculum-hero, .curriculum-track, .features,
-    .about-section, .testimonials-section, .faq-section, .contact-section { padding-left: 24px; padding-right: 24px; }
-    .about-grid, .contact-grid { grid-template-columns:1fr; gap:40px; }
-    .features-grid, .testimonials-grid, .values-grid { grid-template-columns:1fr; }
-    .tcard.featured { grid-column:span 1; }
-    .stats-row { gap:30px; flex-wrap:wrap; }
-    .track-line { display:none; }
-    footer { flex-direction:column; gap:12px; text-align:center; }
+    .about-section, .testimonials-section, .faq-section, .contact-section {
+      padding-left: 24px; padding-right: 24px;
+    }
+
+    /* Grids → single col */
+    .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .values-grid { grid-template-columns: 1fr; }
+    .tcard.featured { grid-column: span 1; }
+
+    /* Stats row */
+    .stats-row {
+      flex-wrap: wrap;
+      margin-left: -24px;
+      margin-right: -24px;
+      width: calc(100% + 48px);
+      padding: 32px 24px;
+    }
+    .stat-item {
+      flex: 1 1 calc(50% - 1px);
+      padding: 16px 20px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-item:nth-child(odd) { border-right: 1px solid var(--border); }
+    .stat-item:nth-last-child(-n+2) { border-bottom: none; }
+
+    .track-line { display: none; }
+    footer { flex-direction: column; gap: 12px; text-align: center; padding: 32px 24px; }
+  }
+
+  /* ═══════════════════════════════════
+     MOBILE  (≤ 600px)
+  ═══════════════════════════════════ */
+  @media (max-width: 600px) {
+    /* Nav */
+    nav { padding: 14px 20px; }
+
+    /* Hide custom cursor on touch */
+    #cursor, #cursor-ring { display: none; }
+    body { cursor: auto; }
+    .btn-primary, .btn-secondary, .hamburger,
+    .form-group input, .form-group textarea,
+    .form-submit, .faq-q, .nav-links a { cursor: auto; }
+
+    /* Hero */
+    .hero {
+      padding: 48px 20px 0;
+      min-height: auto;
+      justify-content: flex-start;
+    }
+    .hero h1 { font-size: clamp(2.8rem, 12vw, 4rem); }
+    .hero-sub { font-size: 0.95rem; max-width: 100%; }
+    .hero-actions { flex-direction: column; gap: 12px; margin-top: 32px; }
+    .btn-primary, .btn-secondary { width: 100%; text-align: center; padding: 15px 20px; }
+    .hero-orb { width: 300px; height: 300px; right: -80px; }
+
+    /* Stats — 2×2 on mobile stays, just tighten */
+    .stats-row { margin-top: 40px; padding: 24px 20px; margin-left: -20px; margin-right: -20px; width: calc(100% + 40px); }
+    .stat-num { font-size: 1.8rem; }
+
+    /* Features */
+    .features { padding: 60px 20px; }
+    .section-title { font-size: 1.8rem; margin-bottom: 32px; }
+    .feature-card { padding: 28px 22px; }
+
+    /* Curriculum */
+    .curriculum-hero { padding: 48px 20px 28px; }
+    .curriculum-track { padding: 32px 20px; }
+    .module { gap: 16px; }
+    .module-num { min-width: 48px; height: 48px; font-size: 1rem; border-radius: 10px; }
+    .module-content { padding: 20px; }
+    .module-title { font-size: 1.05rem; }
+
+    /* About */
+    .about-section { padding: 48px 20px; }
+    .about-grid { gap: 32px; margin-bottom: 48px; }
+    .about-text h2 { font-size: clamp(1.8rem, 8vw, 2.4rem); }
+    .values-grid { grid-template-columns: 1fr; gap: 14px; }
+
+    /* Testimonials */
+    .testimonials-section { padding: 48px 20px; }
+    .testimonials-section h1 { font-size: clamp(2rem, 9vw, 3rem); }
+    .testimonials-grid { gap: 14px; }
+    .tcard { padding: 24px 20px; }
+
+    /* FAQ */
+    .faq-section { padding: 48px 20px; max-width: 100%; }
+    .faq-section h1 { font-size: clamp(2rem, 9vw, 3rem); }
+
+    /* Contact */
+    .contact-section { padding: 48px 20px; }
+    .contact-grid { gap: 32px; }
+    .contact-info h1 { font-size: clamp(2rem, 9vw, 3rem); }
+
+    /* Footer */
+    footer { padding: 28px 20px; font-size: 0.78rem; }
   }
 </style>
 </head>
@@ -711,16 +906,20 @@
 
 <nav>
   <div class="logo">Reinforce<span>Learn</span></div>
-  <ul class="nav-links">
+  <ul class="nav-links" id="nav-links">
     <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
     <li><a href="#" class="nav-link" data-page="about">About</a></li>
     <li><a href="#" class="nav-link" data-page="curriculum">Curriculum</a></li>
     <li><a href="#" class="nav-link" data-page="testimonials">Testimonials</a></li>
     <li><a href="#" class="nav-link" data-page="faq">FAQ</a></li>
     <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
-    <li><a href="https://forms.gle/jrJtZQLG7UqGFMug6" target="_blank" class="nav-cta" style="text-decoration:none;color:var(--white);padding:10px 22px;border-radius:6px;background:var(--purple);font-size:0.875rem;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;transition:background 0.2s,transform 0.2s;cursor:none;" onmouseover="this.style.background='var(--purple-glow)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='var(--purple)';this.style.transform='none'">Get Started</a></li>
+    <li class="nav-cta-li"><a href="https://forms.gle/jrJtZQLG7UqGFMug6" target="_blank" class="nav-cta-link">Get Started</a></li>
   </ul>
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="mobile-overlay" id="mobile-overlay"></div>
 
 <!-- HOME -->
 <div id="home" class="page active">
@@ -1177,7 +1376,7 @@
             <div class="contact-item-icon">📧</div>
             <div>
               <div class="contact-item-label">Email</div>
-              <div class="contact-item-value">reinforcelearn@gmail.com</div>
+              <div class="contact-item-value">hello@reinforcelearn.io</div>
             </div>
           </div>
           <div class="contact-item">
@@ -1218,6 +1417,28 @@
 </footer>
 
 <script>
+  // Hamburger menu
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('nav-links');
+  const overlay = document.getElementById('mobile-overlay');
+
+  function openMenu() {
+    hamburger.classList.add('open');
+    navLinks.classList.add('mobile-open');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    hamburger.classList.remove('open');
+    navLinks.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.contains('open') ? closeMenu() : openMenu();
+  });
+  overlay.addEventListener('click', closeMenu);
+
   // Cursor
   const cursor = document.getElementById('cursor');
   const ring = document.getElementById('cursor-ring');
@@ -1241,6 +1462,7 @@
     document.querySelectorAll('.nav-link').forEach(a => {
       a.classList.toggle('active', a.dataset.page === id);
     });
+    closeMenu();
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
@@ -1313,23 +1535,6 @@
       icon.textContent = '+';
     }
   }
-
-  // Contact form
-  function submitForm() {
-    const name = document.getElementById('f-name').value.trim();
-    const email = document.getElementById('f-email').value.trim();
-    if (!name || !email) {
-      alert('Please fill in at least your name and email.');
-      return;
-    }
-    document.getElementById('contact-form-inner').style.display = 'none';
-    document.getElementById('form-success').style.display = 'block';
-  }
-
-  // Page load animation
-  document.querySelectorAll('.page').forEach(p => {
-    const observer = new IntersectionObserver(() => {}, {});
-  });
 </script>
 </body>
 </html>
