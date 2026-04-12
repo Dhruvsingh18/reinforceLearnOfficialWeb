@@ -844,8 +844,16 @@ function showPage(id){
   document.querySelectorAll('.nav-link').forEach(a=>a.classList.toggle('active',a.dataset.page===id));
   closeMenu();window.scrollTo({top:0,behavior:'smooth'});
 }
+  
 document.querySelectorAll('.nav-link').forEach(a=>{
-  if(!a.href.includes('forms.gle'))a.addEventListener('click',e=>{e.preventDefault();showPage(a.dataset.page);});
+  const page = a.getAttribute('data-page');
+  if(page) {
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      showPage(page);
+    });
+  }
+  // No listener added for external links — browser handles them normally
 });
 
 // FAQ
